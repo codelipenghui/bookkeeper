@@ -18,6 +18,7 @@
 
 package org.apache.bookkeeper.discover;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -38,6 +39,7 @@ public class MockRegistrationClient implements RegistrationClient {
     final ExecutorService executor;
     private long currentVersion = 0;
     private Set<BookieSocketAddress> bookies = new HashSet<BookieSocketAddress>();
+    private Set<BookieSocketAddress> allBookies = new HashSet<BookieSocketAddress>();
     private Set<BookieSocketAddress> readOnlyBookies = new HashSet<BookieSocketAddress>();
     private Set<RegistrationListener> bookieWatchers = new HashSet<RegistrationListener>();
     private Set<RegistrationListener> readOnlyBookieWatchers = new HashSet<RegistrationListener>();
@@ -59,9 +61,7 @@ public class MockRegistrationClient implements RegistrationClient {
         CompletableFuture<Void> promise = new CompletableFuture<>();
         executor.submit(() -> {
                 currentVersion++;
-                for (BookieSocketAddress b : bookies) {
-                    this.bookies.add(b);
-                }
+                Collections.addAll(this.bookies, bookies);
                 bookieWatchers.forEach(w -> w.onBookiesChanged(versioned(this.bookies, currentVersion)));
                 promise.complete(null);
             });
@@ -72,9 +72,7 @@ public class MockRegistrationClient implements RegistrationClient {
         CompletableFuture<Void> promise = new CompletableFuture<>();
         executor.submit(() -> {
                 currentVersion++;
-                for (BookieSocketAddress b : bookies) {
-                    this.bookies.add(b);
-                }
+                this.bookies.addAll(Arrays.asList(bookies));
                 bookieWatchers.forEach(w -> w.onBookiesChanged(versioned(this.bookies, currentVersion)));
                 promise.complete(null);
             });
@@ -85,9 +83,7 @@ public class MockRegistrationClient implements RegistrationClient {
         CompletableFuture<Void> promise = new CompletableFuture<>();
         executor.submit(() -> {
                 currentVersion++;
-                for (BookieSocketAddress b : bookies) {
-                    this.readOnlyBookies.add(b);
-                }
+                this.readOnlyBookies.addAll(Arrays.asList(bookies));
                 readOnlyBookieWatchers.forEach(w -> w.onBookiesChanged(versioned(readOnlyBookies, currentVersion)));
                 promise.complete(null);
             });
@@ -98,9 +94,7 @@ public class MockRegistrationClient implements RegistrationClient {
         CompletableFuture<Void> promise = new CompletableFuture<>();
         executor.submit(() -> {
                 currentVersion++;
-                for (BookieSocketAddress b : bookies) {
-                    this.readOnlyBookies.add(b);
-                }
+                this.readOnlyBookies.addAll(Arrays.asList(bookies));
                 readOnlyBookieWatchers.forEach(w -> w.onBookiesChanged(versioned(readOnlyBookies, currentVersion)));
                 promise.complete(null);
             });
@@ -111,6 +105,13 @@ public class MockRegistrationClient implements RegistrationClient {
     public CompletableFuture<Versioned<Set<BookieSocketAddress>>> getWritableBookies() {
         CompletableFuture<Versioned<Set<BookieSocketAddress>>> promise = new CompletableFuture<>();
         executor.submit(() -> promise.complete(versioned(bookies, currentVersion)));
+        return promise;
+    }
+
+    @Override
+    public CompletableFuture<Versioned<Set<BookieSocketAddress>>> getAllBookies() {
+        CompletableFuture<Versioned<Set<BookieSocketAddress>>> promise = new CompletableFuture<>();
+        executor.submit(() -> promise.complete(versioned(allBookies, currentVersion)));
         return promise;
     }
 
